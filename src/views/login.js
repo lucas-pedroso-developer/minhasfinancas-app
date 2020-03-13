@@ -1,25 +1,47 @@
 import React from 'react'
 import Card from '../components/card'
 import FormGroup from '../components/form-group'
+import { withRouter } from 'react-router-dom'
+import UsuarioService from '../app/service/usuarioService'
+import LocalStorageService from '../app/service/localstorageService'
+import { mensagemErro } from '../components/toastr'
+import {AuthContext} from '../main/provedorAutenticacao'
+
 class Login extends React.Component {
 
 	state = {
 		email: '',
-		senha: ''
+		senha: '',
+		mensagemErro: null
+	}
+
+	constructor() {
+		super();
+		this.service = new UsuarioService();		
 	}
 
 	entrar = () => {
-		console.log('Email: ', this.state.email)
-		console.log('Senha: ', this.state.senha)
+		this.service.autenticar({
+			email: this.state.email,
+			senha: this.state.senha
+		}).then(response => {									
+			this.context.iniciarSessao(response.data);				
+			this.props.history.push('/home')
+		}).catch(erro => {		
+			mensagemErro(erro.response.data)		
+		})
+	}
+
+	prepareCadastrar = () => {
+		this.props.history.push('/cadastro-usuarios')
 	}
 
 	render() {
-		return (
-			<div className="container">
+		return (			
 				<div className="row">
 					<div className="col-md-6" style={ {position : 'relative', left: '300px'} }>
 						<div className="bs-docs-section">
-							<Card title="Login">
+							<Card title="Login">								
 								<div className="row">
 									<div className="col-lg-12">
 										<div className="bs-component">
@@ -41,8 +63,12 @@ class Login extends React.Component {
 														id="exampleInputPassword1" 										
 														placeholder="Password" />
 												</FormGroup>
-												<button onClick={this.entrar} className="btn btn-success">Entrar</button>
-												<button className="btn btn-danger">Cadastrar</button>
+												<button onClick={this.entrar} className="btn btn-success">
+												<i className="pi pi-sign-in"></i>Entrar
+												</button>
+												<button onClick={this.prepareCadastrar}className="btn btn-danger">
+												<i className="pi pi-plus"></i>Cadastrar
+												</button>
 											</fieldset>
 										</div>
 									</div>								
@@ -51,10 +77,12 @@ class Login extends React.Component {
 						</div>
 					</div>
 				</div>	
-			</div>
+			
 		)
 		
 	}
 }
 
-export default Login
+Login.contextType = AuthContext
+
+export default withRouter( Login )
